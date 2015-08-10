@@ -1,0 +1,9 @@
+*
+!.gitignore
+
+!*.md
+!README*
+!LICENSE*
+!/src/
+!/src/*.cr
+!/example.cr
