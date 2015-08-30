@@ -407,7 +407,7 @@ lib LibDBus
   
   alias WakeupMainFunction = Void* -> Void
   
-  alias AllowUnixUserFunction = (Connection, LibC::LongT, Void*) -> BoolT
+  alias AllowUnixUserFunction = (Connection, LibC::Long, Void*) -> BoolT
   
   alias AllowWindowsUserFunction = (Connection, UInt8*, Void*) -> BoolT
   
@@ -471,9 +471,9 @@ lib LibDBus
   
   fun connection_set_dispatch_status_function = "dbus_connection_set_dispatch_status_function"(connection : Connection, function : DispatchStatusFunction, data : Void*, free_data_function : FreeFunction) : Void
   
-  fun connection_get_unix_user = "dbus_connection_get_unix_user"(connection : Connection, uid : LibC::LongT*) : BoolT
+  fun connection_get_unix_user = "dbus_connection_get_unix_user"(connection : Connection, uid : LibC::Long*) : BoolT
   
-  fun connection_get_unix_process_id = "dbus_connection_get_unix_process_id"(connection : Connection, pid : LibC::LongT*) : BoolT
+  fun connection_get_unix_process_id = "dbus_connection_get_unix_process_id"(connection : Connection, pid : LibC::Long*) : BoolT
   
   fun connection_get_adt_audit_session_data = "dbus_connection_get_adt_audit_session_data"(connection : Connection, data : Void**, data_size : Int32*) : BoolT
   
@@ -501,25 +501,25 @@ lib LibDBus
   
   fun connection_set_change_sigpipe = "dbus_connection_set_change_sigpipe"(will_modify_sigpipe : BoolT) : Void
   
-  fun connection_set_max_message_size = "dbus_connection_set_max_message_size"(connection : Connection, size : LibC::LongT) : Void
+  fun connection_set_max_message_size = "dbus_connection_set_max_message_size"(connection : Connection, size : LibC::Long) : Void
   
-  fun connection_get_max_message_size = "dbus_connection_get_max_message_size"(connection : Connection) : LibC::LongT
+  fun connection_get_max_message_size = "dbus_connection_get_max_message_size"(connection : Connection) : LibC::Long
   
-  fun connection_set_max_received_size = "dbus_connection_set_max_received_size"(connection : Connection, size : LibC::LongT) : Void
+  fun connection_set_max_received_size = "dbus_connection_set_max_received_size"(connection : Connection, size : LibC::Long) : Void
   
-  fun connection_get_max_received_size = "dbus_connection_get_max_received_size"(connection : Connection) : LibC::LongT
+  fun connection_get_max_received_size = "dbus_connection_get_max_received_size"(connection : Connection) : LibC::Long
   
-  fun connection_set_max_message_unix_fds = "dbus_connection_set_max_message_unix_fds"(connection : Connection, n : LibC::LongT) : Void
+  fun connection_set_max_message_unix_fds = "dbus_connection_set_max_message_unix_fds"(connection : Connection, n : LibC::Long) : Void
   
-  fun connection_get_max_message_unix_fds = "dbus_connection_get_max_message_unix_fds"(connection : Connection) : LibC::LongT
+  fun connection_get_max_message_unix_fds = "dbus_connection_get_max_message_unix_fds"(connection : Connection) : LibC::Long
   
-  fun connection_set_max_received_unix_fds = "dbus_connection_set_max_received_unix_fds"(connection : Connection, n : LibC::LongT) : Void
+  fun connection_set_max_received_unix_fds = "dbus_connection_set_max_received_unix_fds"(connection : Connection, n : LibC::Long) : Void
   
-  fun connection_get_max_received_unix_fds = "dbus_connection_get_max_received_unix_fds"(connection : Connection) : LibC::LongT
+  fun connection_get_max_received_unix_fds = "dbus_connection_get_max_received_unix_fds"(connection : Connection) : LibC::Long
   
-  fun connection_get_outgoing_size = "dbus_connection_get_outgoing_size"(connection : Connection) : LibC::LongT
+  fun connection_get_outgoing_size = "dbus_connection_get_outgoing_size"(connection : Connection) : LibC::Long
   
-  fun connection_get_outgoing_unix_fds = "dbus_connection_get_outgoing_unix_fds"(connection : Connection) : LibC::LongT
+  fun connection_get_outgoing_unix_fds = "dbus_connection_get_outgoing_unix_fds"(connection : Connection) : LibC::Long
   
   fun connection_preallocate_send = "dbus_connection_preallocate_send"(connection : Connection) : PreallocatedSend
   
@@ -594,7 +594,7 @@ lib LibDBus
   
   fun bus_get_unique_name = "dbus_bus_get_unique_name"(connection : Connection) : UInt8*
   
-  fun bus_get_unix_user = "dbus_bus_get_unix_user"(connection : Connection, name : UInt8*, error : Error*) : LibC::LongT
+  fun bus_get_unix_user = "dbus_bus_get_unix_user"(connection : Connection, name : UInt8*, error : Error*) : LibC::Long
   
   fun bus_get_id = "dbus_bus_get_id"(connection : Connection, error : Error*) : UInt8*
   
