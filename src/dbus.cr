@@ -8,16 +8,18 @@ extend self
   alias BusType = LibDBus::BusType
   
   class Variant
-    def initialize(@value, signature=nil: String?)
-      if signature
-        @signature = signature
-      else
-        @signature = DBus.type_to_sig(@value.class)
-      end
+    def initialize(@value, @signature=nil: String?)
     end
     
     getter value
-    getter signature
+    
+    def signature
+      @signature ||= DBus.type_to_sig(@value.class)
+    end
+    
+    def inspect(io: IO)
+      io << "DBus.variant(" << value << ")"
+    end
   end
   
   def variant(value, signature=nil: String?)
@@ -84,7 +86,7 @@ extend self
     property object
     property interface
     
-    def call(name: String, args: Array, signature=nil: String?, timeout=-1: Int32, reply=true: Bool)
+    def call(name: String, args=[] of Nil: Array, signature=nil: String?, timeout=-1: Int32, reply=true: Bool)
       if object.destination
         msg = LibDBus.message_new_method_call(
           object.destination, object.path, interface, name
