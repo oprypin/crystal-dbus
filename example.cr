@@ -16,3 +16,7 @@ int.call("Notify", [
   "Crystal Messenger", 0u32, "mail-message-new", "New Message", "<b>Hi!</b><br/>- Oleh",
   ["default", "Reply", "other", "Ignore"], {"category": DBus.variant("email.arrived")}, -1
 ], signature="susssasa{sv}i")
+
+
+obj = bus.object("org.freedesktop.PowerManagement", "/org/freedesktop/PowerManagement")
+p obj.interface("org.freedesktop.PowerManagement").call("CanSuspend", [] of Nil).not_nil!.reply
