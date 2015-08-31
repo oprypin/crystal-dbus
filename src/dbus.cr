@@ -29,10 +29,10 @@ extend self
   alias Type = UInt8 | Bool | Int16 | UInt16 | Int32 | UInt32 | Int64 | UInt64 | Float64 | String | Array(Type) | Hash(Type, Type) | Variant
   
   class Bus
-    def initialize(bus_type=BusType::SESSION)
+    def initialize(@type=BusType::SESSION)
       LibDBus.error_init(out err)
       
-      @bus = LibDBus.bus_get(bus_type, pointerof(err))
+      @bus = LibDBus.bus_get(@type, pointerof(err))
       if LibDBus.error_is_set(pointerof(err)) == LibDBus::TRUE
         error = String.new(err.message)
         LibDBus.error_free(pointerof(err))
@@ -40,6 +40,8 @@ extend self
       end
       assert @bus, "bus_get error"
     end
+    
+    getter type
     
     def finalize
       LibDBus.connection_unref(@bus)
@@ -52,6 +54,10 @@ extend self
       Object.new(self, destination, "/")
     end
     
+    def inspect(io: IO)
+      io << type
+    end
+    
     def to_unsafe
       @bus
     end
@@ -60,11 +66,20 @@ extend self
   
   class Object
     def initialize(@bus: Bus, @destination=nil: String?, @path="/": String)
+      unless @path.starts_with? "/"
+        raise ArgumentError.new("Must specify absolute path")
+      end
+      @path = @path.chomp "/"
     end
     
-    property bus
-    property destination
-    property path
+    getter bus, destination
+
+    def path
+      @path.empty? ? "/" : @path
+    end
+    def name
+      path.split('/')[-1]
+    end
     
     def object(path: String)
       if !path.starts_with? "/"
@@ -76,17 +91,22 @@ extend self
     def interface(interface: String)
       Interface.new(self, interface)
     end
+
+    def inspect(io: IO)
+      bus.inspect(io)
+      io << ' ' << destination << ' ' << path
+    end
   end
   
   
-  class Interface
+  struct Interface
     def initialize(@object: Object, @interface: String)
     end
     
-    property object
-    property interface
+    getter object
+    getter interface
     
-    def call(name: String, args=[] of Nil: Array, signature=nil: String?, timeout=-1: Int32, reply=true: Bool)
+    def call(name: String, args=[] of Nil: Array, signature=nil: String?, timeout=-1: Int32)
       if object.destination
         msg = LibDBus.message_new_method_call(
           object.destination, object.path, interface, name
@@ -99,9 +119,7 @@ extend self
         assert msg, "message_new_signal error"
       end
       
-      if !reply
-        LibDBus.message_set_no_reply(msg, LibDBus::TRUE)
-      end
+      #LibDBus.message_set_no_reply(msg, LibDBus::TRUE)
       
       iter_v :: LibDBus::MessageIter
       iter = pointerof(iter_v)
@@ -116,19 +134,17 @@ extend self
         append_arg(arg, iter, sig)
       end
       
-      if reply
-        pending :: LibDBus::PendingCall
-        assert LibDBus.connection_send_with_reply(object.bus, msg, out pending, timeout) == LibDBus::TRUE, "connection_send_with_reply error"
-        assert pending, "connection_send_with_reply error"
-      else
-        assert LibDBus.connection_send(object.bus, msg, nil) == LibDBus::TRUE, "connection_send error"
-      end
+      pending :: LibDBus::PendingCall
+      assert LibDBus.connection_send_with_reply(object.bus, msg, pointerof(pending), timeout) == LibDBus::TRUE, "connection_send_with_reply error"
+      assert pending, "connection_send_with_reply error"
+
+      #assert LibDBus.connection_send(object.bus, msg, nil) == LibDBus::TRUE, "connection_send error"
 
       LibDBus.connection_flush(object.bus)
 
       LibDBus.message_unref(msg)
       
-      Pending.new(pending.not_nil!) if reply
+      Pending.new(pending)
     end
     
     private def append_arg(arg, iter: LibDBus::MessageIter*, signature: String)
@@ -227,7 +243,7 @@ extend self
     end
     
     private def append_basic_arg(arg, iter: LibDBus::MessageIter*, signature: Char)
-      val = if arg.responds_to? :to_unsafe
+      val = if arg.responds_to?(:to_unsafe)
         arg.to_unsafe
       else
         arg
@@ -235,6 +251,11 @@ extend self
       assert LibDBus.message_iter_append_basic(
         iter, signature.ord, pointerof(val) as Pointer(Void)
       ) == LibDBus::TRUE, "message_iter_append_basic error"
+    end
+    
+    def inspect(io: IO)
+      object.inspect(io)
+      io << ' ' << interface
     end
   end
   
