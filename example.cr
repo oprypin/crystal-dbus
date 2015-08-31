@@ -18,3 +18,25 @@ int.call("Notify", [
 ], signature="susssasa{sv}i")
 
 p int.call("GetServerInformation").reply
+
+
+
+require "dbus/introspect"
+
+macro show(arr)
+  puts {{arr.id.stringify}} + ":"
+  {{arr}}.each do |x|
+    puts "  " + x.inspect
+  end
+end
+
+dest = bus.destination("org.freedesktop.Notifications")
+show dest.list_objects
+
+obj = dest.object("/org/freedesktop/Notifications")
+show obj.list_interfaces
+
+int = obj.interface("org.freedesktop.Notifications")
+show int.list_methods
+show int.list_signals
+show int.list_properties
