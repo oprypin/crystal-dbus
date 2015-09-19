@@ -113,7 +113,7 @@ module DBus
   end
   
   private def signature_next(signature: String, index=0: Int)
-    if index < signature.length
+    if index < signature.size
       case signature[index]
       when LibDBus::TYPE_ARRAY
         index += 1
@@ -134,7 +134,7 @@ module DBus
       end
       index
     else
-      signature.length
+      signature.size
     end
   end
   
@@ -145,7 +145,7 @@ module DBus
     loop do
       nxt = signature_next(signature, prev)
       result << signature[prev...nxt]
-      break unless nxt < signature.length
+      break unless nxt < signature.size
       prev = nxt
     end
     result

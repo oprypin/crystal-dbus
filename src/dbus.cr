@@ -193,7 +193,7 @@ extend self
             assert arg.is_a? Hash
             debug_assert item_sig[-1] == LibDBus::DICT_ENTRY_END_CHAR
             kv_sigs = DBus.signature_split(item_sig[1...-1])
-            debug_assert kv_sigs.length == 2
+            debug_assert kv_sigs.size == 2
             key_sig, value_sig = kv_sigs
             
             arg.each do |key, value|
