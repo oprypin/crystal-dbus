@@ -64,11 +64,11 @@ module DBus
       args.map { |arg| arg.type } .join
     end
     
-    def call(args=[] of Nil: Array, timeout=-1: Int32)
+    def call(args=[] of Nil : Array, timeout=-1 : Int32)
       @interface.call(@name, args, signature: signature, timeout: timeout)
     end
     
-    def inspect(io: IO)
+    def inspect(io : IO)
       interface.inspect(io)
       io << ' ' << name << "(" << (args.map &.inspect).join(", ") << ")->(" << (out_args.map &.inspect).join(", ") << ")"
     end
@@ -84,7 +84,7 @@ module DBus
       args.map { |arg| arg.type } .join
     end
     
-    def inspect(io: IO)
+    def inspect(io : IO)
       interface.inspect(io)
       io << ' ' << name << '(' << (args.map &.inspect).join(", ") << ')'
     end
@@ -102,14 +102,14 @@ module DBus
       @writable
     end
     
-    def get(timeout=-1: Int32)
+    def get(timeout=-1 : Int32)
       @interface.call(@name, signature: "", timeout: timeout)
     end
-    def set(value, timeout=-1: Int32)
+    def set(value, timeout=-1 : Int32)
       @interface.call(@name, [value], signature: @type, timeout: timeout)
     end
 
-    def inspect(io: IO)
+    def inspect(io : IO)
       interface.inspect(io)
       io << ' ' << name << '[' << (@readable && 'r') << (@writable && 'w') << ']' << ':' << type
     end

@@ -8,7 +8,7 @@ extend self
   alias BusType = LibDBus::BusType
   
   class Variant
-    def initialize(@value, @signature=nil: String?)
+    def initialize(@value, @signature=nil : String?)
     end
     
     getter value
@@ -17,12 +17,12 @@ extend self
       @signature ||= DBus.type_to_sig(@value.class)
     end
     
-    def inspect(io: IO)
+    def inspect(io : IO)
       io << "DBus.variant(" << value << ")"
     end
   end
   
-  def variant(value, signature=nil: String?)
+  def variant(value, signature=nil : String?)
     Variant.new(value, signature)
   end
   
@@ -47,14 +47,14 @@ extend self
       LibDBus.connection_unref(@bus)
     end
     
-    def object(destination: String, path: String)
+    def object(destination : String, path : String)
       Object.new(self, destination, path)
     end
-    def destination(destination: String)
+    def destination(destination : String)
       Object.new(self, destination, "/")
     end
     
-    def inspect(io: IO)
+    def inspect(io : IO)
       io << type
     end
     
@@ -65,7 +65,7 @@ extend self
   
   
   class Object
-    def initialize(@bus: Bus, @destination=nil: String?, @path="/": String)
+    def initialize(@bus : Bus, @destination=nil : String?, @path="/": String)
       unless @path.starts_with? "/"
         raise ArgumentError.new("Must specify absolute path")
       end
@@ -81,18 +81,18 @@ extend self
       path.split('/')[-1]
     end
     
-    def object(path: String)
+    def object(path : String)
       if !path.starts_with? "/"
         path = @path + "/" + path
       end
       Object.new(bus, destination, path)
     end
     
-    def interface(interface: String)
+    def interface(interface : String)
       Interface.new(self, interface)
     end
 
-    def inspect(io: IO)
+    def inspect(io : IO)
       bus.inspect(io)
       io << ' ' << destination << ' ' << path
     end
@@ -100,13 +100,13 @@ extend self
   
   
   struct Interface
-    def initialize(@object: Object, @interface: String)
+    def initialize(@object : Object, @interface : String)
     end
     
     getter object
     getter interface
     
-    def call(name: String, args=[] of Nil: Array, signature=nil: String?, timeout=-1: Int32)
+    def call(name : String, args=[] of Nil : Array, signature=nil : String?, timeout=-1 : Int32)
       if object.destination
         msg = LibDBus.message_new_method_call(
           object.destination, object.path, interface, name
@@ -147,7 +147,7 @@ extend self
       Pending.new(pending)
     end
     
-    private def append_arg(arg, iter: LibDBus::MessageIter*, signature: String)
+    private def append_arg(arg, iter : LibDBus::MessageIter*, signature : String)
       case sig0 = signature[0]
         when LibDBus::TYPE_BYTE
           assert arg.is_a? UInt8
@@ -242,7 +242,7 @@ extend self
       end
     end
     
-    private def append_basic_arg(arg, iter: LibDBus::MessageIter*, signature: Char)
+    private def append_basic_arg(arg, iter : LibDBus::MessageIter*, signature : Char)
       val = if arg.responds_to?(:to_unsafe)
         arg.to_unsafe
       else
@@ -253,7 +253,7 @@ extend self
       ) == LibDBus::TRUE, "message_iter_append_basic error"
     end
     
-    def inspect(io: IO)
+    def inspect(io : IO)
       object.inspect(io)
       io << ' ' << interface
     end
@@ -261,7 +261,7 @@ extend self
   
   
   class Pending
-    def initialize(@pending: LibDBus::PendingCall)
+    def initialize(@pending : LibDBus::PendingCall)
       
     end
     
@@ -291,7 +291,7 @@ extend self
       reply
     end
     
-    private def read_arg(iter: LibDBus::MessageIter*)
+    private def read_arg(iter : LibDBus::MessageIter*)
       case type = LibDBus.message_iter_get_arg_type(iter)
         when LibDBus::TYPE_BYTE.ord
           result_u8 :: UInt8

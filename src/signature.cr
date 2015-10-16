@@ -63,7 +63,7 @@ module DBus
   end
 
   # Convert a Crystal type name (limited subset) to a DBus signature
-  private def type_name_to_sig(type: String): String
+  private def type_name_to_sig(type : String): String
     tokens = type.gsub("DBus::", "").gsub { |c|
       c.alphanumeric? ? c : " #{c} "
     }.split
@@ -78,41 +78,41 @@ module DBus
     type_name_to_sig(type.name)
   end
   # Slight optimization in trivial cases
-  def type_to_sig(type: UInt8.class): String
+  def type_to_sig(type : UInt8.class): String
     LibDBus::TYPE_BYTE.to_s
   end
-  def type_to_sig(type: Bool.class): String
+  def type_to_sig(type : Bool.class): String
     LibDBus::TYPE_BOOLEAN.to_s
   end
-  def type_to_sig(type: Int16.class): String
+  def type_to_sig(type : Int16.class): String
     LibDBus::TYPE_INT16.to_s
   end
-  def type_to_sig(type: UInt16.class): String
+  def type_to_sig(type : UInt16.class): String
     LibDBus::TYPE_UINT16.to_s
   end
-  def type_to_sig(type: Int32.class): String
+  def type_to_sig(type : Int32.class): String
     LibDBus::TYPE_INT32.to_s
   end
-  def type_to_sig(type: UInt32.class): String
+  def type_to_sig(type : UInt32.class): String
     LibDBus::TYPE_UINT32.to_s
   end
-  def type_to_sig(type: Int64.class): String
+  def type_to_sig(type : Int64.class): String
     LibDBus::TYPE_INT64.to_s
   end
-  def type_to_sig(type: UInt64.class): String
+  def type_to_sig(type : UInt64.class): String
     LibDBus::TYPE_UINT64.to_s
   end
-  def type_to_sig(type: Float64.class): String
+  def type_to_sig(type : Float64.class): String
     LibDBus::TYPE_DOUBLE.to_s
   end
-  def type_to_sig(type: String.class): String
+  def type_to_sig(type : String.class): String
     LibDBus::TYPE_STRING.to_s
   end
-  def type_to_sig(type: Variant.class): String
+  def type_to_sig(type : Variant.class): String
     LibDBus::TYPE_VARIANT.to_s
   end
   
-  private def signature_next(signature: String, index=0: Int)
+  private def signature_next(signature : String, index=0 : Int)
     if index < signature.size
       case signature[index]
       when LibDBus::TYPE_ARRAY
@@ -139,7 +139,7 @@ module DBus
   end
   
   # Split a DBus signature into separate types
-  def signature_split(signature: String): Array(String)
+  def signature_split(signature : String): Array(String)
     result = [] of String
     prev = 0
     loop do
