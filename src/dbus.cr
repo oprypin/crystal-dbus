@@ -8,10 +8,11 @@ extend self
   alias BusType = LibDBus::BusType
   
   class Variant
-    def initialize(@value, @signature=nil : String?)
+    getter value : Type
+    getter signature : String?
+
+    def initialize(@value : Type, @signature : String? = nil)
     end
-    
-    getter value
     
     def signature
       @signature ||= DBus.type_to_sig(@value.class)
@@ -22,14 +23,16 @@ extend self
     end
   end
   
-  def variant(value, signature=nil : String?)
+  def variant(value, signature : String? = nil)
     Variant.new(value, signature)
   end
   
   alias Type = UInt8 | Bool | Int16 | UInt16 | Int32 | UInt32 | Int64 | UInt64 | Float64 | String | Array(Type) | Hash(Type, Type) | Variant
   
   class Bus
-    def initialize(@type=BusType::SESSION)
+    getter type : BusType
+
+    def initialize(@type = BusType::SESSION)
       LibDBus.error_init(out err)
       
       @bus = LibDBus.bus_get(@type, pointerof(err))
@@ -40,8 +43,6 @@ extend self
       end
       assert @bus, "bus_get error"
     end
-    
-    getter type
     
     def finalize
       LibDBus.connection_unref(@bus)
@@ -65,15 +66,16 @@ extend self
   
   
   class Object
-    def initialize(@bus : Bus, @destination=nil : String?, @path="/": String)
+    getter bus : Bus
+    getter destination : String?
+
+    def initialize(@bus : Bus, @destination : String? = nil, @path : String = "/")
       unless @path.starts_with? "/"
         raise ArgumentError.new("Must specify absolute path")
       end
       @path = @path.chomp "/"
     end
     
-    getter bus, destination
-
     def path
       @path.empty? ? "/" : @path
     end
@@ -100,16 +102,16 @@ extend self
   
   
   struct Interface
+    getter object : Object
+    getter interface : String
+
     def initialize(@object : Object, @interface : String)
     end
     
-    getter object
-    getter interface
-    
-    def call(name : String, args=[] of Nil : Array, signature=nil : String?, timeout=-1 : Int32)
-      if object.destination
+    def call(name : String, args : Array = [] of Nil, signature : String? = nil, timeout : Int32 = -1)
+      if dest = object.destination
         msg = LibDBus.message_new_method_call(
-          object.destination, object.path, interface, name
+          dest, object.path, interface, name
         )
         assert msg, "message_new_method_call error"
       else
@@ -121,7 +123,7 @@ extend self
       
       #LibDBus.message_set_no_reply(msg, LibDBus::TRUE)
       
-      iter_v :: LibDBus::MessageIter
+      iter_v = uninitialized LibDBus::MessageIter
       iter = pointerof(iter_v)
       LibDBus.message_iter_init_append(msg, iter)
       
@@ -134,7 +136,7 @@ extend self
         append_arg(arg, iter, sig)
       end
       
-      pending :: LibDBus::PendingCall
+      pending = uninitialized LibDBus::PendingCall
       assert LibDBus.connection_send_with_reply(object.bus, msg, pointerof(pending), timeout) == LibDBus::TRUE, "connection_send_with_reply error"
       assert pending, "connection_send_with_reply error"
 
@@ -183,7 +185,7 @@ extend self
         when LibDBus::TYPE_ARRAY
           item_sig = signature[1..-1]
           
-          arr_iter_v :: LibDBus::MessageIter
+          arr_iter_v = uninitialized LibDBus::MessageIter
           arr_iter = pointerof(arr_iter_v)
           assert LibDBus.message_iter_open_container(
             iter, LibDBus::TYPE_ARRAY.ord, item_sig, arr_iter
@@ -197,7 +199,7 @@ extend self
             key_sig, value_sig = kv_sigs
             
             arg.each do |key, value|
-              entry_iter_v :: LibDBus::MessageIter
+              entry_iter_v = uninitialized LibDBus::MessageIter
               entry_iter = pointerof(entry_iter_v)
               assert LibDBus.message_iter_open_container(
                 arr_iter, LibDBus::TYPE_DICT_ENTRY.ord, nil, entry_iter
@@ -225,7 +227,7 @@ extend self
         when LibDBus::TYPE_VARIANT
           assert arg.is_a? Variant
           
-          var_iter_v :: LibDBus::MessageIter
+          var_iter_v = uninitialized LibDBus::MessageIter
           var_iter = pointerof(var_iter_v)
           assert LibDBus.message_iter_open_container(
             iter, LibDBus::TYPE_VARIANT.ord, arg.signature, var_iter
@@ -262,7 +264,6 @@ extend self
   
   class Pending
     def initialize(@pending : LibDBus::PendingCall)
-      
     end
     
     def reply
@@ -270,7 +271,7 @@ extend self
       msg = LibDBus.pending_call_steal_reply(@pending)
       assert msg, "pending_call_steal_reply error"
       
-      iter_v :: LibDBus::MessageIter
+      iter_v = uninitialized LibDBus::MessageIter
       iter = pointerof(iter_v)
       reply = [] of Type
       if LibDBus.message_iter_init(msg, iter) == LibDBus::TRUE
@@ -294,48 +295,48 @@ extend self
     private def read_arg(iter : LibDBus::MessageIter*)
       case type = LibDBus.message_iter_get_arg_type(iter)
         when LibDBus::TYPE_BYTE.ord
-          result_u8 :: UInt8
+          result_u8 = uninitialized UInt8
           LibDBus.message_iter_get_basic(iter, pointerof(result_u8) as Pointer(Void))
           result_u8
         when LibDBus::TYPE_BOOLEAN.ord
-          result_u32 :: UInt32
+          result_u32 = uninitialized UInt32
           LibDBus.message_iter_get_basic(iter, pointerof(result_u32) as Pointer(Void))
           result_u32 != 0u32
         when LibDBus::TYPE_INT16.ord
-          result_i16 :: Int16
+          result_i16 = uninitialized Int16
           LibDBus.message_iter_get_basic(iter, pointerof(result_i16) as Pointer(Void))
           result_i16
         when LibDBus::TYPE_UINT16.ord
-          result_u16 :: UInt16
+          result_u16 = uninitialized UInt16
           LibDBus.message_iter_get_basic(iter, pointerof(result_u16) as Pointer(Void))
           result_u16
         when LibDBus::TYPE_INT32.ord
-          result_i32 :: Int32
+          result_i32 = uninitialized Int32
           LibDBus.message_iter_get_basic(iter, pointerof(result_i32) as Pointer(Void))
           result_i32
         when LibDBus::TYPE_UINT32.ord
-          result_u32 :: UInt32
+          result_u32 = uninitialized UInt32
           LibDBus.message_iter_get_basic(iter, pointerof(result_u32) as Pointer(Void))
           result_u32
         when LibDBus::TYPE_INT64.ord
-          result_i64 :: Int64
+          result_i64 = uninitialized Int64
           LibDBus.message_iter_get_basic(iter, pointerof(result_i64) as Pointer(Void))
           result_i64
         when LibDBus::TYPE_UINT64.ord
-          result_u64 :: UInt64
+          result_u64 = uninitialized UInt64
           LibDBus.message_iter_get_basic(iter, pointerof(result_u64) as Pointer(Void))
           result_u64
         when LibDBus::TYPE_DOUBLE.ord
-          result_f64 :: Float64
+          result_f64 = uninitialized Float64
           LibDBus.message_iter_get_basic(iter, pointerof(result_f64) as Pointer(Void))
           result_f64
         when LibDBus::TYPE_STRING.ord
-          result_pchar :: Pointer(UInt8)
+          result_pchar = uninitialized Pointer(UInt8)
           LibDBus.message_iter_get_basic(iter, pointerof(result_pchar) as Pointer(Void))
           String.new(result_pchar)
         
         when LibDBus::TYPE_ARRAY.ord
-          arr_iter_v :: LibDBus::MessageIter
+          arr_iter_v = uninitialized LibDBus::MessageIter
           arr_iter = pointerof(arr_iter_v)
           LibDBus.message_iter_recurse(
             iter, arr_iter
@@ -345,7 +346,7 @@ extend self
             result_hash = {} of Type => Type
             
             while LibDBus.message_iter_get_arg_type(arr_iter) != LibDBus::TYPE_INVALID.ord
-              entry_iter_v :: LibDBus::MessageIter
+              entry_iter_v = uninitialized LibDBus::MessageIter
               entry_iter = pointerof(entry_iter_v)
               LibDBus.message_iter_recurse(
                 arr_iter, entry_iter
@@ -372,7 +373,7 @@ extend self
           end
           
         when LibDBus::TYPE_VARIANT.ord
-          var_iter_v :: LibDBus::MessageIter
+          var_iter_v = uninitialized LibDBus::MessageIter
           var_iter = pointerof(var_iter_v)
           LibDBus.message_iter_recurse(
             iter, var_iter

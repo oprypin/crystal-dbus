@@ -3,6 +3,8 @@ require "./dbus"
 
 module DBus
   class Object
+    @introspection : XML::Node?
+
     def introspect
       @introspection ||= XML.parse(
         interface("org.freedesktop.DBus.Introspectable").call("Introspect").reply[0] as String
@@ -49,22 +51,27 @@ module DBus
         args = sig.children.select { |c| c.name == "arg" } .map { |arg|
           Argument.new(arg["name"], arg["type"])
         }
-        Signal.new(self, sig["name"].not_nil!, args)
+        Property.new(
+          self, sig["name"].not_nil!, sig["type"].not_nil!,
+          sig["access"].try &.includes?("read") || false, sig["access"].try &.includes?("write") || false)
       }
     end
   end
   
   struct Method
+    getter interface : Interface
+    getter name : String
+    getter args : Array(Argument)
+    getter out_args : Array(Argument)
+
     def initialize(@interface, @name, @args, @out_args)
     end
-    
-    getter interface, name, args, out_args
     
     def signature
       args.map { |arg| arg.type } .join
     end
     
-    def call(args=[] of Nil : Array, timeout=-1 : Int32)
+    def call(args : Array = [] of Nil, timeout : Int32 = -1)
       @interface.call(@name, args, signature: signature, timeout: timeout)
     end
     
@@ -75,10 +82,12 @@ module DBus
   end
       
   struct Signal
+    getter interface : Interface
+    getter name : String
+    getter args : Array(Argument)
+
     def initialize(@interface, @name, @args)
     end
-    
-    getter interface, name, args
     
     def signature
       args.map { |arg| arg.type } .join
@@ -91,21 +100,19 @@ module DBus
   end
   
   struct Property
+    getter interface : Interface
+    getter name : String
+    getter type : String
+    getter? readable : Bool
+    getter? writable : Bool
+
     def initialize(@interface, @name, @type, @readable, @writable)
     end
     
-    getter interface, name, type
-    def readable?
-      @readable
-    end
-    def writable?
-      @writable
-    end
-    
-    def get(timeout=-1 : Int32)
+    def get(timeout : Int32 = -1)
       @interface.call(@name, signature: "", timeout: timeout)
     end
-    def set(value, timeout=-1 : Int32)
+    def set(value, timeout : Int32 = -1)
       @interface.call(@name, [value], signature: @type, timeout: timeout)
     end
 
@@ -116,10 +123,11 @@ module DBus
   end
     
   struct Argument
+    getter name : String?
+    getter type : String?
+
     def initialize(@name, @type)
     end
-    
-    getter name, type
     
     def inspect(io : IO)
       io << name << ':' << type

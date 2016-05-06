@@ -112,7 +112,7 @@ module DBus
     LibDBus::TYPE_VARIANT.to_s
   end
   
-  private def signature_next(signature : String, index=0 : Int)
+  private def signature_next(signature : String, index : Int = 0)
     if index < signature.size
       case signature[index]
       when LibDBus::TYPE_ARRAY
