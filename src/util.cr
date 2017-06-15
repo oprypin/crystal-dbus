@@ -23,7 +23,7 @@ end
 
 # Assert only in debug mode
 macro debug_assert(cond, exc = nil)
-  ifdef !release
+  {% unless flag? :release %}
     assert({{ cond }}, {{ exc }})
-  end
+  {% end %}
 end

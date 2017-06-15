@@ -14,7 +14,7 @@ int.call("Notify", ["", 0u32, "", "", "Notification", [] of String, {} of String
 
 int.call("Notify", [
   "Crystal Messenger", 0u32, "mail-message-new", "New Message", "<b>Hi!</b><br/>- Oleh",
-  ["default", "Reply", "other", "Ignore"], {"category": DBus.variant("email.arrived")}, -1
+  ["default", "Reply", "other", "Ignore"], {"category" => DBus.variant("email.arrived")}, -1
 ], signature="susssasa{sv}i")
 
 p int.call("GetServerInformation").reply
@@ -24,7 +24,7 @@ p int.call("GetServerInformation").reply
 require "dbus/introspect"
 
 macro show(arr)
-  puts {{arr.id.stringify}} + ":"
+  puts {{arr.stringify}} + ":"
   {{arr}}.each do |x|
     puts "  " + x.inspect
   end

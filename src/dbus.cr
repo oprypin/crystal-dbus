@@ -251,7 +251,7 @@ extend self
         arg
       end
       assert LibDBus.message_iter_append_basic(
-        iter, signature.ord, pointerof(val) as Pointer(Void)
+        iter, signature.ord, pointerof(val).as Pointer(Void)
       ) == LibDBus::TRUE, "message_iter_append_basic error"
     end
     
@@ -296,43 +296,43 @@ extend self
       case type = LibDBus.message_iter_get_arg_type(iter)
         when LibDBus::TYPE_BYTE.ord
           result_u8 = uninitialized UInt8
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u8) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_u8).as Pointer(Void))
           result_u8
         when LibDBus::TYPE_BOOLEAN.ord
           result_u32 = uninitialized UInt32
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u32) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_u32).as Pointer(Void))
           result_u32 != 0u32
         when LibDBus::TYPE_INT16.ord
           result_i16 = uninitialized Int16
-          LibDBus.message_iter_get_basic(iter, pointerof(result_i16) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_i16).as Pointer(Void))
           result_i16
         when LibDBus::TYPE_UINT16.ord
           result_u16 = uninitialized UInt16
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u16) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_u16).as Pointer(Void))
           result_u16
         when LibDBus::TYPE_INT32.ord
           result_i32 = uninitialized Int32
-          LibDBus.message_iter_get_basic(iter, pointerof(result_i32) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_i32).as Pointer(Void))
           result_i32
         when LibDBus::TYPE_UINT32.ord
           result_u32 = uninitialized UInt32
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u32) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_u32).as Pointer(Void))
           result_u32
         when LibDBus::TYPE_INT64.ord
           result_i64 = uninitialized Int64
-          LibDBus.message_iter_get_basic(iter, pointerof(result_i64) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_i64).as Pointer(Void))
           result_i64
         when LibDBus::TYPE_UINT64.ord
           result_u64 = uninitialized UInt64
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u64) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_u64).as Pointer(Void))
           result_u64
         when LibDBus::TYPE_DOUBLE.ord
           result_f64 = uninitialized Float64
-          LibDBus.message_iter_get_basic(iter, pointerof(result_f64) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_f64).as Pointer(Void))
           result_f64
         when LibDBus::TYPE_STRING.ord
           result_pchar = uninitialized Pointer(UInt8)
-          LibDBus.message_iter_get_basic(iter, pointerof(result_pchar) as Pointer(Void))
+          LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
           String.new(result_pchar)
         
         when LibDBus::TYPE_ARRAY.ord

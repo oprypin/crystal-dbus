@@ -7,7 +7,7 @@ module DBus
 
     def introspect
       @introspection ||= XML.parse(
-        interface("org.freedesktop.DBus.Introspectable").call("Introspect").reply[0] as String
+        interface("org.freedesktop.DBus.Introspectable").call("Introspect").reply[0].as String
       ).children[-1]
     end
 
