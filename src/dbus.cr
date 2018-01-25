@@ -334,6 +334,10 @@ extend self
           result_pchar = uninitialized Pointer(UInt8)
           LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
           String.new(result_pchar)
+        when LibDBus::TYPE_OBJECT_PATH.ord
+          result_pchar = uninitialized Pointer(UInt8)
+          LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
+          String.new(result_pchar)
         
         when LibDBus::TYPE_ARRAY.ord
           arr_iter_v = uninitialized LibDBus::MessageIter
