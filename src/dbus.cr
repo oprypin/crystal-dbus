@@ -99,6 +99,10 @@ module DBus
       bus.inspect(io)
       io << ' ' << destination << ' ' << path
     end
+
+    def property_interface
+      interface "org.freedesktop.DBus.Properties"
+    end
   end
 
 
@@ -254,6 +258,14 @@ module DBus
       assert LibDBus.message_iter_append_basic(
         iter, signature.ord, pointerof(val).as Pointer(Void)
       ) == LibDBus::TRUE, "message_iter_append_basic error"
+    end
+
+    def get(key : String, timeout : Int32 = -1)
+      @object.property_interface.call("Get", [@interface, key], timeout: timeout)
+    end
+
+    def set(key : String, value : T, timeout : Int32 = -1) forall T
+      @object.property_interface.call("Set", [@interface, key, value], timeout: timeout)
     end
 
     def inspect(io : IO)
