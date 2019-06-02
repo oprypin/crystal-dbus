@@ -1,10 +1,16 @@
 *
+
 !.gitignore
+!/shard.yml
 
 !*.md
 !README*
 !LICENSE*
+
 !/src/
 !/src/*.cr
-!/example.cr
-!/shard.yml
+
+!/examples/
+!/examples/*.cr
+!/examples/lib/
+!/examples/lib/*

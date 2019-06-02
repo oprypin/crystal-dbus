@@ -5,7 +5,7 @@ crystal-dbus
 
 Only sending messages (calling methods) is supported for now.
 
-See [example](example.cr).
+See [example](examples/example.cr).
 
 Structs and other rarely used types are not implemented yet.
 
