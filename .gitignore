@@ -7,3 +7,4 @@
 !/src/
 !/src/*.cr
 !/example.cr
+!/shard.yml
