@@ -10,7 +10,7 @@ macro assert(cond, exc = nil)
     {% if exc %}
       raise {{ exc }}
     {% else %}
-      {% if cond.is_a? Call && %w(== != < > <= >=).any? {|s| s == cond.name.stringify} %}
+      {% if cond.is_a? Call && %w(== != < > <= >=).any? { |s| s == cond.name.stringify } %}
         {% a = cond.receiver; b = cond.args[0] %}
         %error = "#{{{ a.stringify }}} => #{{{ a }}} {{ cond.name }} #{{{ b }}} <= #{{{ b.stringify }}}"
       {% else %}

@@ -15,10 +15,9 @@ int.call("Notify", ["", 0u32, "", "", "Notification", [] of String, {} of String
 int.call("Notify", [
   "Crystal Messenger", 0u32, "mail-message-new", "New Message", "<b>Hi!</b><br/>- Oleh",
   ["default", "Reply", "other", "Ignore"], {"category" => DBus.variant("email.arrived")}, -1
-], signature="susssasa{sv}i")
+], signature: "susssasa{sv}i")
 
 p int.call("GetServerInformation").reply
-
 
 
 require "dbus/introspect"
