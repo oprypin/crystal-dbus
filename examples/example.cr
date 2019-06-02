@@ -1,4 +1,4 @@
-require "dbus"
+require "../src/dbus"
 
 bus = DBus::Bus.new
 
@@ -17,7 +17,7 @@ int.call("Notify", [
 
 p int.call("GetServerInformation").reply
 
-require "dbus/introspect"
+require "../src/introspect"
 
 macro show(arr)
   puts {{arr.stringify}} + ":"

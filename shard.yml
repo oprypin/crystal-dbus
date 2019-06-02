@@ -1,0 +1,18 @@
+name: dbus
+version: 0.1.0
+
+authors:
+  - Oleh Prypin # Creator
+  - Chris Watson <chris@watzon.me>
+
+description: |
+  Crystal bindings to libdbus
+
+libraries:
+  libdbus: ~> 1.12.0
+
+development_dependencies:
+  webmock:
+    github: manastech/webmock.cr
+
+license: MIT
