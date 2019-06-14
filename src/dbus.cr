@@ -186,7 +186,9 @@ module DBus
       when LibDBus::TYPE_STRING
         assert arg.is_a? String
         append_basic_arg(arg, iter, sig0)
-
+      when LibDBus::TYPE_OBJECT_PATH
+        assert arg.is_a? String
+        append_basic_arg(arg, iter, sig0)
       when LibDBus::TYPE_ARRAY
         item_sig = signature[1..-1]
 
