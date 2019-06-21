@@ -261,11 +261,11 @@ module DBus
     end
 
     def get(key : String, timeout : Int32 = -1)
-      @object.property_interface.call("Get", [@interface, key], timeout: timeout)
+      @object.property_interface.call("Get", [@interface, key], signature: "ss", timeout: timeout)
     end
 
-    def set(key : String, value : T, timeout : Int32 = -1) forall T
-      @object.property_interface.call("Set", [@interface, key, value], timeout: timeout)
+    def set(key : String, value : Type, signature : String? = nil, timeout : Int32 = -1)
+      @object.property_interface.call("Set", [@interface, key, DBus.variant(value, signature)], signature: "ssv", timeout: timeout)
     end
 
     def inspect(io : IO)

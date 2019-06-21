@@ -113,16 +113,16 @@ module DBus
     end
 
     def get(timeout : Int32 = -1)
-      @interface.call(@name, signature: "", timeout: timeout)
+      @interface.get(@name, timeout: timeout)
     end
 
-    def set(value, timeout : Int32 = -1)
-      @interface.call(@name, [value], signature: @type, timeout: timeout)
+    def set(value : Type, timeout : Int32 = -1)
+      @interface.set(@name, value, signature: @type, timeout: timeout)
     end
 
     def inspect(io : IO)
       interface.inspect(io)
-      io << ' ' << name << '[' << (@readable && 'r') << (@writable && 'w') << ']' << ':' << type
+      io << ' ' << name << '[' << ('r' if @readable) << ('w' if @writable) << ']' << ':' << type
     end
   end
 
