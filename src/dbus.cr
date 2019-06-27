@@ -107,8 +107,6 @@ module DBus
   struct Interface
     getter object : Object
     getter interface : String
-    @@b_signal_handler_on = false
-    @@h_interface_signal = Hash(String,String).new
 
     def initialize(@object : Object, @interface : String)
     end
