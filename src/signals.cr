@@ -4,32 +4,31 @@ require "./util"
 module DBus
   extend self
 
-  def start_properties_changed_listener ( bus : Bus, proc : Proc(Array(Type),Void))
+  def start_properties_changed_listener(bus : Bus, proc : Proc(Array(Type), Void))
     spawn do
       err = LibDBus::Error.new
       LibDBus.error_init(pointerof(err))
       conn = bus.to_unsafe
       puts "Bus Address #{conn}"
       str = "type='signal',interface='org.freedesktop.DBus.Properties'"
-      LibDBus.bus_add_match(conn,str,pointerof(err))
+      LibDBus.bus_add_match(conn, str, pointerof(err))
       if LibDBus.error_is_set(pointerof(err)) == LibDBus::TRUE
         error = String.new(err.message)
         LibDBus.error_free(pointerof(err))
         raise error
       end
-      LibDBus.connection_flush( conn )
+      LibDBus.connection_flush(conn)
 
-      while( LibDBus.connection_read_write( conn, 0 ) )
-
-        msg = LibDBus.connection_pop_message( conn )
-        if( msg.null? )
+      while LibDBus.connection_read_write(conn, 0)
+        msg = LibDBus.connection_pop_message(conn)
+        if msg.null?
           sleep 1
           next
         else
-          if( LibDBus.message_is_signal(msg, "org.freedesktop.DBus.Properties", "PropertiesChanged" ) )
+          if LibDBus.message_is_signal(msg, "org.freedesktop.DBus.Properties", "PropertiesChanged")
             arg = DBus::SignalArg.new(msg)
             res = arg.arguments
-            proc.call( res )
+            proc.call(res)
           end
         end
       end
@@ -37,8 +36,7 @@ module DBus
   end
 
   class SignalArg
-
-    def initialize (@msg : LibDBus::Message)
+    def initialize(@msg : LibDBus::Message)
     end
 
     def arguments
@@ -54,7 +52,5 @@ module DBus
       LibDBus.message_unref(@msg)
       reply
     end
-
   end
-
 end

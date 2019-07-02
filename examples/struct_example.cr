@@ -1,6 +1,6 @@
 require "dbus"
 
-#Demonstrates reading a Struct Type into an Array(DBus::Type)
+# Demonstrates reading a Struct Type into an Array(DBus::Type)
 
 bus = DBus::Bus.new(DBus::BusType::SYSTEM)
 ofono_dest = bus.destination("org.ofono")
@@ -14,9 +14,9 @@ if reply.size > 0
   if modems.size > 0
     count = modems.size
     puts "#{modems.size} Modems available"
-    count.times do | i | 
+    count.times do |i|
       modem = modems[i].as(Array(DBus::Type))
-      puts "#{i+1} - Object Path\t: #{modem[0].inspect}"
+      puts "#{i + 1} - Object Path\t: #{modem[0].inspect}"
       puts "Properties\t: #{modem[1].inspect}"
       puts ""
     end
@@ -24,4 +24,3 @@ if reply.size > 0
     puts "No Modems"
   end
 end
-
