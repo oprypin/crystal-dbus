@@ -111,6 +111,9 @@ module DBus
   def type_to_sig(type : Variant.class) : String
     LibDBus::TYPE_VARIANT.to_s
   end
+  def type_to_sig(type : Array.class) : String
+    LibDBus::TYPE_ARRAY.to_s
+  end
 
   private def signature_next(signature : String, index : Int = 0)
     if index < signature.size

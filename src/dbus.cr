@@ -27,6 +27,15 @@ module DBus
     Variant.new(value, signature)
   end
 
+  def variant_array_of_strings( value )
+    assert value.is_a? Array
+    va = [] of Type
+    value.each do | item |
+      va << item.as(Type)
+    end
+    Variant.new(va,"as")
+  end
+
   alias Type = UInt8 | Bool | Int16 | UInt16 | Int32 | UInt32 | Int64 | UInt64 | Float64 | String | Array(Type) | Hash(Type, Type) | Variant
 
   class Bus
@@ -234,18 +243,43 @@ module DBus
 
       when LibDBus::TYPE_VARIANT
         assert arg.is_a? Variant
+        arg_sig =  arg.signature
+        arg_type = arg.value.class
 
-        var_iter_v = uninitialized LibDBus::MessageIter
-        var_iter = pointerof(var_iter_v)
-        assert LibDBus.message_iter_open_container(
-          iter, LibDBus::TYPE_VARIANT.ord, arg.signature, var_iter
-        ) == LibDBus::TRUE, "message_iter_open_container error"
+        if arg_type == Array(DBus::Type)
+          var_iter_v = uninitialized LibDBus::MessageIter
+          var_iter = pointerof(var_iter_v)
+          assert LibDBus.message_iter_open_container(
+            iter, LibDBus::TYPE_VARIANT.ord, arg_sig, var_iter
+          ) == LibDBus::TRUE, "message_iter_open_container error"
 
-        append_arg(arg.value, var_iter, arg.signature)
+          arr_iter_v = uninitialized LibDBus::MessageIter
+          arr_iter = pointerof(arr_iter_v)
+          assert LibDBus.message_iter_open_container(
+            var_iter, LibDBus::TYPE_ARRAY.ord, LibDBus::TYPE_VARIANT.to_s, arr_iter
+          ) == LibDBus::TRUE, "message_iter_open_container error"
 
-        assert LibDBus.message_iter_close_container(
-          iter, var_iter
-        ) == LibDBus::TRUE, "message_iter_close_container error"
+          va= arg.value.as(Array(Type))
+          va.each do |item|
+            append_arg(item, arr_iter, DBus.type_to_sig(item.class))
+          end
+          assert LibDBus.message_iter_close_container(
+            var_iter, arr_iter
+          ) == LibDBus::TRUE, "message_iter_close_container error"
+          assert LibDBus.message_iter_close_container(
+            iter, var_iter
+          ) == LibDBus::TRUE, "message_iter_close_container error"
+        else
+          var_iter_v = uninitialized LibDBus::MessageIter
+          var_iter = pointerof(var_iter_v)
+          assert LibDBus.message_iter_open_container(
+            iter, LibDBus::TYPE_VARIANT.ord, arg.signature, var_iter
+          ) == LibDBus::TRUE, "message_iter_open_container error"
+          append_arg(arg.value, var_iter, arg.signature)
+          assert LibDBus.message_iter_close_container(
+            iter, var_iter
+          ) == LibDBus::TRUE, "message_iter_close_container error"
+        end
 
       else
         raise "Unsupported type '#{signature}'"
