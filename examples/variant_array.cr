@@ -1,8 +1,9 @@
-# This example illustrates passing an array as a Variant type needed in DBus method argument.
-# Not this code will actually work properly and pull all contacts from a phone to a file "/tmp/contacts.txt"
+# This example illustrates passing an array as a Variant type needed in some DBus method arguments.
+# Note: This code will actually work properly and pull all contacts from a phone to a file "/tmp/contacts.txt"
 # provided there is a phonebookAccess session already started. 
-# And X has to be replaced in "/org/bluez/obex/client/sessionX" by the correct session number that has previously been started.
-# See Bluez obex PhonebookAccess 
+# And X in "/org/bluez/obex/client/sessionX" must be replaced by the correct session number that has previously been started.
+# This can be observed via a dbus monitoring tool like D-feet.
+# See Bluez obex PhonebookAccess for more info
 
 require "dbus"
 bus_s = DBus::Bus.new DBus::BusType::SESSION

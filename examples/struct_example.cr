@@ -1,4 +1,5 @@
 # Demonstrates reading a Struct Type into an Array(DBus::Type)
+# Requires phone paired and connected to the computer
 
 require "dbus"
 

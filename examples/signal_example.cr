@@ -1,4 +1,4 @@
-# This example illustrates how to listen for the signals emiited on the system and the session buses
+# This example illustrates how to listen for the signals emitted on the system and the session buses
 
 require "dbus"
 

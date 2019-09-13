@@ -27,13 +27,13 @@ module DBus
     Variant.new(value, signature)
   end
 
-  def variant_array_of_strings( value )
+  def variant_array( value, item_type )
     assert value.is_a? Array
     va = [] of Type
     value.each do | item |
       va << item.as(Type)
     end
-    Variant.new(va,"as")
+    Variant.new(va,"a#{DBus.type_to_sig(item_type)}")
   end
 
   alias Type = UInt8 | Bool | Int16 | UInt16 | Int32 | UInt32 | Int64 | UInt64 | Float64 | String | Array(Type) | Hash(Type, Type) | Variant
@@ -458,4 +458,24 @@ module DBus
       LibDBus.pending_call_unref(@pending)
     end
   end
+
+  class MethodArg
+    def initialize(@msg : LibDBus::Message)
+    end
+
+    def arguments
+      iter_v = uninitialized LibDBus::MessageIter
+      iter = pointerof(iter_v)
+      reply = [] of Type
+      if LibDBus.message_iter_init(@msg, iter) == LibDBus::TRUE
+        while LibDBus.message_iter_get_arg_type(iter) != LibDBus::TYPE_INVALID.ord
+          reply << DBus.read_arg(iter)
+          LibDBus.message_iter_next(iter)
+        end
+      end
+      LibDBus.message_unref(@msg)
+      reply
+    end
+  end
+
 end
