@@ -1,6 +1,6 @@
-require "dbus"
-
 # Demonstrates reading a Struct Type into an Array(DBus::Type)
+
+require "dbus"
 
 bus = DBus::Bus.new(DBus::BusType::SYSTEM)
 ofono_dest = bus.destination("org.ofono")
