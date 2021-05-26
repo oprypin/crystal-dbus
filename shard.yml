@@ -9,7 +9,7 @@ description: |
 
 license: MIT
 
-crystal: 0.28.0  # down to 0.22.0
+crystal: 1.0.0
 
 libraries:
   libdbus: ~> 1.10
