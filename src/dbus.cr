@@ -27,6 +27,15 @@ module DBus
     Variant.new(value, signature)
   end
 
+  def variant_array( value, item_type )
+    assert value.is_a? Array
+    va = [] of Type
+    value.each do | item |
+      va << item.as(Type)
+    end
+    Variant.new(va,"a#{DBus.type_to_sig(item_type)}")
+  end
+
   alias Type = UInt8 | Bool | Int16 | UInt16 | Int32 | UInt32 | Int64 | UInt64 | Float64 | String | Array(Type) | Hash(Type, Type) | Variant
 
   class Bus
@@ -186,6 +195,9 @@ module DBus
       when LibDBus::TYPE_STRING
         assert arg.is_a? String
         append_basic_arg(arg, iter, sig0)
+      when LibDBus::TYPE_OBJECT_PATH
+        assert arg.is_a? String
+        append_basic_arg(arg, iter, sig0)
 
       when LibDBus::TYPE_ARRAY
         item_sig = signature[1..-1]
@@ -231,18 +243,43 @@ module DBus
 
       when LibDBus::TYPE_VARIANT
         assert arg.is_a? Variant
+        arg_sig =  arg.signature
+        arg_type = arg.value.class
 
-        var_iter_v = uninitialized LibDBus::MessageIter
-        var_iter = pointerof(var_iter_v)
-        assert LibDBus.message_iter_open_container(
-          iter, LibDBus::TYPE_VARIANT.ord, arg.signature, var_iter
-        ) == LibDBus::TRUE, "message_iter_open_container error"
+        if arg_type == Array(DBus::Type)
+          var_iter_v = uninitialized LibDBus::MessageIter
+          var_iter = pointerof(var_iter_v)
+          assert LibDBus.message_iter_open_container(
+            iter, LibDBus::TYPE_VARIANT.ord, arg_sig, var_iter
+          ) == LibDBus::TRUE, "message_iter_open_container error"
 
-        append_arg(arg.value, var_iter, arg.signature)
+          arr_iter_v = uninitialized LibDBus::MessageIter
+          arr_iter = pointerof(arr_iter_v)
+          assert LibDBus.message_iter_open_container(
+            var_iter, LibDBus::TYPE_ARRAY.ord, LibDBus::TYPE_VARIANT.to_s, arr_iter
+          ) == LibDBus::TRUE, "message_iter_open_container error"
 
-        assert LibDBus.message_iter_close_container(
-          iter, var_iter
-        ) == LibDBus::TRUE, "message_iter_close_container error"
+          va= arg.value.as(Array(Type))
+          va.each do |item|
+            append_arg(item, arr_iter, DBus.type_to_sig(item.class))
+          end
+          assert LibDBus.message_iter_close_container(
+            var_iter, arr_iter
+          ) == LibDBus::TRUE, "message_iter_close_container error"
+          assert LibDBus.message_iter_close_container(
+            iter, var_iter
+          ) == LibDBus::TRUE, "message_iter_close_container error"
+        else
+          var_iter_v = uninitialized LibDBus::MessageIter
+          var_iter = pointerof(var_iter_v)
+          assert LibDBus.message_iter_open_container(
+            iter, LibDBus::TYPE_VARIANT.ord, arg.signature, var_iter
+          ) == LibDBus::TRUE, "message_iter_open_container error"
+          append_arg(arg.value, var_iter, arg.signature)
+          assert LibDBus.message_iter_close_container(
+            iter, var_iter
+          ) == LibDBus::TRUE, "message_iter_close_container error"
+        end
 
       else
         raise "Unsupported type '#{signature}'"
@@ -272,8 +309,120 @@ module DBus
       object.inspect(io)
       io << ' ' << interface
     end
+
   end
 
+  protected def read_arg(iter : LibDBus::MessageIter*)
+    case type = LibDBus.message_iter_get_arg_type(iter)
+      when LibDBus::TYPE_BYTE.ord
+        result_u8 = uninitialized UInt8
+        LibDBus.message_iter_get_basic(iter, pointerof(result_u8).as Pointer(Void))
+        result_u8
+      when LibDBus::TYPE_BOOLEAN.ord
+        result_u32 = uninitialized UInt32
+        LibDBus.message_iter_get_basic(iter, pointerof(result_u32).as Pointer(Void))
+        result_u32 != 0u32
+      when LibDBus::TYPE_INT16.ord
+        result_i16 = uninitialized Int16
+        LibDBus.message_iter_get_basic(iter, pointerof(result_i16).as Pointer(Void))
+        result_i16
+      when LibDBus::TYPE_UINT16.ord
+        result_u16 = uninitialized UInt16
+        LibDBus.message_iter_get_basic(iter, pointerof(result_u16).as Pointer(Void))
+        result_u16
+      when LibDBus::TYPE_INT32.ord
+        result_i32 = uninitialized Int32
+        LibDBus.message_iter_get_basic(iter, pointerof(result_i32).as Pointer(Void))
+        result_i32
+      when LibDBus::TYPE_UINT32.ord
+        result_u32 = uninitialized UInt32
+        LibDBus.message_iter_get_basic(iter, pointerof(result_u32).as Pointer(Void))
+        result_u32
+      when LibDBus::TYPE_INT64.ord
+        result_i64 = uninitialized Int64
+        LibDBus.message_iter_get_basic(iter, pointerof(result_i64).as Pointer(Void))
+        result_i64
+      when LibDBus::TYPE_UINT64.ord
+        result_u64 = uninitialized UInt64
+        LibDBus.message_iter_get_basic(iter, pointerof(result_u64).as Pointer(Void))
+        result_u64
+      when LibDBus::TYPE_DOUBLE.ord
+        result_f64 = uninitialized Float64
+        LibDBus.message_iter_get_basic(iter, pointerof(result_f64).as Pointer(Void))
+        result_f64
+      when LibDBus::TYPE_STRING.ord
+        result_pchar = uninitialized Pointer(UInt8)
+        LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
+        String.new(result_pchar)
+      when LibDBus::TYPE_OBJECT_PATH.ord
+        result_pchar = uninitialized Pointer(UInt8)
+        LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
+        String.new(result_pchar)
+
+      when LibDBus::TYPE_STRUCT.ord
+        arr_iter_v = uninitialized LibDBus::MessageIter
+        arr_iter = pointerof(arr_iter_v)
+        LibDBus.message_iter_recurse(
+          iter, arr_iter
+        )
+
+        result_array = [] of DBus::Type
+        while LibDBus.message_iter_get_arg_type(arr_iter) != LibDBus::TYPE_INVALID.ord
+          result_array << read_arg(arr_iter)
+          LibDBus.message_iter_next(arr_iter)
+        end
+        result_array
+
+      when LibDBus::TYPE_ARRAY.ord
+        arr_iter_v = uninitialized LibDBus::MessageIter
+        arr_iter = pointerof(arr_iter_v)
+        LibDBus.message_iter_recurse(
+          iter, arr_iter
+        )
+
+        if LibDBus.message_iter_get_element_type(iter) == LibDBus::TYPE_DICT_ENTRY.ord
+          result_hash = {} of Type => Type
+
+          while LibDBus.message_iter_get_arg_type(arr_iter) != LibDBus::TYPE_INVALID.ord
+            entry_iter_v = uninitialized LibDBus::MessageIter
+            entry_iter = pointerof(entry_iter_v)
+            LibDBus.message_iter_recurse(
+              arr_iter, entry_iter
+            )
+
+            key = read_arg(entry_iter)
+            LibDBus.message_iter_next(entry_iter)
+            result_hash[key] = read_arg(entry_iter)
+
+            LibDBus.message_iter_next(arr_iter)
+          end
+
+          result_hash
+
+        else
+          result_array = [] of Type
+
+          while LibDBus.message_iter_get_arg_type(arr_iter) != LibDBus::TYPE_INVALID.ord
+            result_array << read_arg(arr_iter)
+            LibDBus.message_iter_next(arr_iter)
+          end
+
+          result_array
+        end
+
+      when LibDBus::TYPE_VARIANT.ord
+        var_iter_v = uninitialized LibDBus::MessageIter
+        var_iter = pointerof(var_iter_v)
+        LibDBus.message_iter_recurse(
+          iter, var_iter
+        )
+
+        DBus.variant(read_arg(var_iter))
+
+      else
+        raise "Unsupported type '#{type.chr}'"
+    end
+    end
 
   class Pending
     def initialize(@pending : LibDBus::PendingCall)
@@ -289,7 +438,7 @@ module DBus
       reply = [] of Type
       if LibDBus.message_iter_init(msg, iter) == LibDBus::TRUE
         while LibDBus.message_iter_get_arg_type(iter) != LibDBus::TYPE_INVALID.ord
-          reply << read_arg(iter)
+          reply << DBus.read_arg(iter)
           LibDBus.message_iter_next(iter)
         end
       end
@@ -305,106 +454,28 @@ module DBus
       reply
     end
 
-    private def read_arg(iter : LibDBus::MessageIter*)
-      case type = LibDBus.message_iter_get_arg_type(iter)
-        when LibDBus::TYPE_BYTE.ord
-          result_u8 = uninitialized UInt8
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u8).as Pointer(Void))
-          result_u8
-        when LibDBus::TYPE_BOOLEAN.ord
-          result_u32 = uninitialized UInt32
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u32).as Pointer(Void))
-          result_u32 != 0u32
-        when LibDBus::TYPE_INT16.ord
-          result_i16 = uninitialized Int16
-          LibDBus.message_iter_get_basic(iter, pointerof(result_i16).as Pointer(Void))
-          result_i16
-        when LibDBus::TYPE_UINT16.ord
-          result_u16 = uninitialized UInt16
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u16).as Pointer(Void))
-          result_u16
-        when LibDBus::TYPE_INT32.ord
-          result_i32 = uninitialized Int32
-          LibDBus.message_iter_get_basic(iter, pointerof(result_i32).as Pointer(Void))
-          result_i32
-        when LibDBus::TYPE_UINT32.ord
-          result_u32 = uninitialized UInt32
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u32).as Pointer(Void))
-          result_u32
-        when LibDBus::TYPE_INT64.ord
-          result_i64 = uninitialized Int64
-          LibDBus.message_iter_get_basic(iter, pointerof(result_i64).as Pointer(Void))
-          result_i64
-        when LibDBus::TYPE_UINT64.ord
-          result_u64 = uninitialized UInt64
-          LibDBus.message_iter_get_basic(iter, pointerof(result_u64).as Pointer(Void))
-          result_u64
-        when LibDBus::TYPE_DOUBLE.ord
-          result_f64 = uninitialized Float64
-          LibDBus.message_iter_get_basic(iter, pointerof(result_f64).as Pointer(Void))
-          result_f64
-        when LibDBus::TYPE_STRING.ord
-          result_pchar = uninitialized Pointer(UInt8)
-          LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
-          String.new(result_pchar)
-        when LibDBus::TYPE_OBJECT_PATH.ord
-          result_pchar = uninitialized Pointer(UInt8)
-          LibDBus.message_iter_get_basic(iter, pointerof(result_pchar).as Pointer(Void))
-          String.new(result_pchar)
-
-        when LibDBus::TYPE_ARRAY.ord
-          arr_iter_v = uninitialized LibDBus::MessageIter
-          arr_iter = pointerof(arr_iter_v)
-          LibDBus.message_iter_recurse(
-            iter, arr_iter
-          )
-
-          if LibDBus.message_iter_get_element_type(iter) == LibDBus::TYPE_DICT_ENTRY.ord
-            result_hash = {} of Type => Type
-
-            while LibDBus.message_iter_get_arg_type(arr_iter) != LibDBus::TYPE_INVALID.ord
-              entry_iter_v = uninitialized LibDBus::MessageIter
-              entry_iter = pointerof(entry_iter_v)
-              LibDBus.message_iter_recurse(
-                arr_iter, entry_iter
-              )
-
-              key = read_arg(entry_iter)
-              LibDBus.message_iter_next(entry_iter)
-              result_hash[key] = read_arg(entry_iter)
-
-              LibDBus.message_iter_next(arr_iter)
-            end
-
-            result_hash
-
-          else
-            result_array = [] of Type
-
-            while LibDBus.message_iter_get_arg_type(arr_iter) != LibDBus::TYPE_INVALID.ord
-              result_array << read_arg(arr_iter)
-              LibDBus.message_iter_next(arr_iter)
-            end
-
-            result_array
-          end
-
-        when LibDBus::TYPE_VARIANT.ord
-          var_iter_v = uninitialized LibDBus::MessageIter
-          var_iter = pointerof(var_iter_v)
-          LibDBus.message_iter_recurse(
-            iter, var_iter
-          )
-
-          DBus.variant(read_arg(var_iter))
-
-        else
-          raise "Unsupported type '#{type.chr}'"
-      end
-    end
-
     def finalize
       LibDBus.pending_call_unref(@pending)
     end
   end
+
+  class MethodArg
+    def initialize(@msg : LibDBus::Message)
+    end
+
+    def arguments
+      iter_v = uninitialized LibDBus::MessageIter
+      iter = pointerof(iter_v)
+      reply = [] of Type
+      if LibDBus.message_iter_init(@msg, iter) == LibDBus::TRUE
+        while LibDBus.message_iter_get_arg_type(iter) != LibDBus::TYPE_INVALID.ord
+          reply << DBus.read_arg(iter)
+          LibDBus.message_iter_next(iter)
+        end
+      end
+      LibDBus.message_unref(@msg)
+      reply
+    end
+  end
+
 end
